@@ -1,0 +1,25 @@
+{
+  "name": "node-schema",
+  "description": "A package for building javascript object schemas",
+  "author": "Adam Nalisnick <theadam4257@gmail.com>",
+  "version": "1.0.0",
+  "license": "MIT",
+  "main": "index.js",
+  "keywords": [
+    "validation",
+    "schema"
+  ]
+  "dependencies": {
+    "lodash": "^2.4.1"
+  },
+  "devDependencies": {
+    "chai": "^1.9.1",
+    "istanbul": "^0.3.0",
+    "mocha": "^1.20.1",
+    "sinomocha": "^0.2.2"
+  },
+  "scripts": {
+    "test": "node_modules/.bin/istanbul cover node_modules/.bin/_mocha -- --reporter Spec --ui bdd --require ./test/support/pretest",
+    "coverage": "npm test && open coverage/lcov-report/index.html"
+  }
+}
