@@ -2,7 +2,7 @@
   "name": "node-schema",
   "description": "A package for building javascript object schemas",
   "author": "Adam Nalisnick <theadam4257@gmail.com>",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "license": "MIT",
   "main": "index.js",
   "repository": {
@@ -21,7 +21,8 @@
     "chai": "^1.9.1",
     "istanbul": "^0.3.0",
     "mocha": "^1.20.1",
-    "sinomocha": "^0.2.2"
+    "sinomocha": "^0.2.2",
+    "string-validator": "^1.0.1"
   },
   "scripts": {
     "test": "node_modules/.bin/istanbul cover node_modules/.bin/_mocha -- --reporter Spec --ui bdd --require ./test/support/pretest",

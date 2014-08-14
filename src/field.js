@@ -1,15 +1,16 @@
 var _ = require('lodash');
 var Schema = require('./schema');
 
-module.exports = exports = Field = {};
+var Field = module.exports = exports = {};
 
-Field.createModifier = function(modifierFunc){
+Field.createMiddleware = function(modifierFunc){
   return function(){
-    var args = Array.prototype.slice.call(arguments, 0);
-    var schema = args.pop();
+    var initialArgs = Array.prototype.slice.call(arguments, 0);
+    var schema = initialArgs.pop();
     var compiled = Schema(schema);
 
     var validator = function(value, object, options){
+      var args = initialArgs.slice(0);
       args.push(value);
       args.push(object);
       args.push(options);
@@ -24,14 +25,14 @@ Field.createModifier = function(modifierFunc){
   };
 };
 
-Field.optional = Field.createModifier(function(value, object, options, next){
+Field.optional = Field.createMiddleware(function(value, object, options, next){
   if(value === undefined){
     return null;
   }
   return next();
 });
 
-Field.name = Field.createModifier(function(name, value, object, options, next){
+Field.name = Field.createMiddleware(function(name, value, object, options, next){
   var messages = next();
 
   if(_.isArray(messages) && _.size(messages) > 0){

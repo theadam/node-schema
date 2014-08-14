@@ -1,6 +1,6 @@
 var _ = require('lodash');
 
-module.exports = exports = Schema = function(schema){
+var Schema = module.exports = exports = function(schema){
   if(!this instanceof Schema){
     return new Schema(schema);
   }
@@ -28,9 +28,8 @@ module.exports = exports = Schema = function(schema){
 
     return {
       validate: function(value, object, options){
-
         if(options === undefined){
-          options = object || undefined;
+          options = object;
           object = null;
         }
 
