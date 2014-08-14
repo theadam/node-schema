@@ -2,9 +2,14 @@
   "name": "node-schema",
   "description": "A package for building javascript object schemas",
   "author": "Adam Nalisnick <theadam4257@gmail.com>",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "license": "MIT",
   "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/theadam/node-schema.git"
+  },
+  "bugs": "https://github.com/theadam/node-schema/issues",
   "keywords": [
     "validation",
     "schema"
