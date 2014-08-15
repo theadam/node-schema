@@ -92,6 +92,7 @@ var createValueValidator = function(schema){
           messages = [message];
           return false;
         }
+
         messages.push(message);
       }
     });

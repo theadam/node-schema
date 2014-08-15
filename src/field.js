@@ -18,7 +18,7 @@ Field.createMiddleware = function(modifierFunc){
         return compiled.validate(value, object, options);
       }); // the next function
 
-      return modifierFunc.apply(this, args);
+      return modifierFunc.apply(null, args);
     };
 
     return {validate: validator};
