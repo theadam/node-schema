@@ -8,21 +8,6 @@ A simple way to build javascript schemas for validating objects.
 node-schema focuses on simplicity and flexibility.  Its great when you need ease of use,
 custom validation functions, or custom messages returned from validation.
 
-A compiled schema is just an object with a validate function with this signature:
-
-```javascript
-function(value, object, options){
-  // Value is the data being validated, object
-  // is the object that contains the value,
-  // and options is an object passed to the validate
-  // function that contains any special options.
-
-  // Returns the result of the validation,
-  // usually an object or an array of errors.
-  // Returns null if the value is valid.
-}
-```
-
 In order to compile a schema, you just use the schema function.  
 
 Schemas can be used to validate simple values.
@@ -194,7 +179,7 @@ Field.optional = Field.createMiddleware(function(value, object, options, next){
 ```
 
 The next function is what would be returned if this middleware function never existed.
-returning next() will just make a noop middleware function.  The optional function, however,
+returning next() will just make a no-op middleware function.  The optional function, however,
 returns null if the value is undefined, and the normal validation result if defined.
 
 ###License (MIT)
