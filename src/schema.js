@@ -87,7 +87,7 @@ var createValueValidator = function(schema){
     var messages = [];
 
     _.forIn(schema, function(validator, message){
-      if(!validator(value, object)){
+      if(!validator(value, object, options)){
         if(options.failFast){
           messages = [message];
           return false;

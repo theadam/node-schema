@@ -2,7 +2,7 @@
   "name": "node-schema",
   "description": "A package for building javascript object schemas",
   "author": "Adam Nalisnick <theadam4257@gmail.com>",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "license": "MIT",
   "main": "index.js",
   "repository": {
