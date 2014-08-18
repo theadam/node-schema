@@ -49,7 +49,7 @@ The validating functions take 3 arguments
 * __object__: the object containing the value
 * __options__: the options passed to the validate function
 
-The real power comes in, however with object schemas.
+Object schemas provide a lot more power
 
 ```javascript
 var userSchema = Schema({
@@ -108,8 +108,6 @@ postSchema.validate({
 }
 */
 ```
-
-
 
 A compiled schema is just an object with a validate function with this signature:
 
@@ -184,6 +182,7 @@ returns null if the value is undefined, and the normal validation result if defi
 
 ###License (MIT)
 
+```
 MIT License
 Copyright (c) 2014 Adam Nalisnick
 
@@ -205,3 +204,4 @@ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
 LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+```
