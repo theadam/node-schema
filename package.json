@@ -21,11 +21,10 @@
     "chai": "^1.9.1",
     "istanbul": "^0.3.0",
     "mocha": "^1.20.1",
-    "sinomocha": "^0.2.2",
     "string-validator": "^1.0.1"
   },
   "scripts": {
-    "test": "node_modules/.bin/istanbul cover node_modules/.bin/_mocha -- --reporter Spec --ui bdd --require ./test/support/pretest",
+    "test": "node_modules/.bin/istanbul cover node_modules/.bin/_mocha -- --reporter Spec --ui bdd",
     "coverage": "npm test && open coverage/lcov-report/index.html"
   }
 }

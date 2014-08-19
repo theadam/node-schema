@@ -1,7 +1,7 @@
 var _ = require('lodash');
 
 var Schema = module.exports = exports = function(schema){
-  if(!this instanceof Schema){
+  if(!(this instanceof Schema)){
     return new Schema(schema);
   }
   if(_.isObject(schema) && schema.hasOwnProperty('validate') && _.isFunction(schema.validate)){
