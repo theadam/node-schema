@@ -5,12 +5,16 @@ var Schema = require('../')
 
 describe('Schema', function(){
 
-  it('should return the argument when its a schema', function(){
+  it('should keep the validate function of an object', function(){
     var schema = {
-      validate: function(){}
+      validate: function(){
+        return ['hey'];
+      }
     };
 
-    Schema(schema).should.equal(schema);
+    var schemaObj = Schema(schema);
+    schemaObj.should.be.an.instanceof(Schema);
+    schemaObj.validate('anything').should.eql(['hey']);
   });
 
   it('should fail when given an empty object', function(){
@@ -39,6 +43,10 @@ describe('Schema', function(){
   })
 
   describe('Value Schema', function(){
+
+    it('should be an instance of Schema', function(){
+      schema.should.be.an.instanceof(Schema);
+    });
 
     it('should be able to validate a value', function(){
       schema.validate(4).should.eql(['message']);
@@ -70,6 +78,7 @@ describe('Schema', function(){
         }
       });
 
+      objSchema.should.be.an.instanceof(Schema);
       objSchema.validate({key: 4}).should.eql({key: ['message']});
       objSchema.validate({key: 3}).should.eql({key: ['message', 'message2']});
       expect(objSchema.validate({key: 6})).to.be.null;
@@ -85,6 +94,7 @@ describe('Schema', function(){
         key: schema
       });
 
+      objSchema.should.be.an.instanceof(Schema);
       objSchema.validate({key: 4}).should.eql({key: ['message']});
       objSchema.validate({key: 3}).should.eql({key: ['message', 'message2']});
       expect(objSchema.validate({key: 6})).to.be.null;

@@ -109,7 +109,7 @@ postSchema.validate({
 */
 ```
 
-A compiled schema is just an object with a validate function with this signature:
+A schema can also be compiled from an object with a validate function with this signature:
 
 ```javascript
 function(value, object, options){
@@ -168,16 +168,17 @@ Custom middleware can also be created with the Field.createMiddleware function.
 A good example of how to do this, is the source for the Field.optional function.
 
 ```javascript
-Field.optional = Field.createMiddleware(function(value, object, options, next){
+Field.optional = Field.createMiddleware(function(value, object, options, schema){
   if(value === undefined){
     return null;
   }
-  return next();
+  return schema.validate(value, object, options);
 });
 ```
 
-The next function is what would be returned if this middleware function never existed.
-returning next() will just make a no-op middleware function.  The optional function, however,
+The schema argument, is just the compiled schema nested under this middleware.  Calling the
+schema's validate function with value, object, and options as arguments will return
+the validation result as if the middleware was not there.  The optional function, however,
 returns null if the value is undefined, and the normal validation result if defined.
 
 ###License (MIT)

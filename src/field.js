@@ -10,13 +10,16 @@ Field.createMiddleware = function(modifierFunc){
     var compiled = Schema(schema);
 
     var validator = function(value, object, options){
+      if(options === undefined){
+        options = object;
+        object = null;
+      }
+
       var args = initialArgs.slice(0);
       args.push(value);
-      args.push(object);
-      args.push(options);
-      args.push(function(){
-        return compiled.validate(value, object, options);
-      }); // the next function
+      args.push(object || {});
+      args.push(options || {});
+      args.push(compiled);
 
       return modifierFunc.apply(null, args);
     };
@@ -25,15 +28,15 @@ Field.createMiddleware = function(modifierFunc){
   };
 };
 
-Field.optional = Field.createMiddleware(function(value, object, options, next){
+Field.optional = Field.createMiddleware(function(value, object, options, schema){
   if(value === undefined){
     return null;
   }
-  return next();
+  return schema.validate(value, object, options);
 });
 
-Field.name = Field.createMiddleware(function(name, value, object, options, next){
-  var messages = next();
+Field.name = Field.createMiddleware(function(name, value, object, options, schema){
+  var messages = schema.validate(value, object, options);
 
   if(_.isArray(messages) && _.size(messages) > 0){
     return _.map(messages, function(message){
@@ -46,4 +49,20 @@ Field.name = Field.createMiddleware(function(name, value, object, options, next)
 
   return messages;
 
+});
+
+Field.only = Field.createMiddleware(function(value, object, options, schema){
+  var message = options.unknownFieldMessage || 'contains an unknown field: {field}';
+  var unknownKeys = _.difference(_.keys(value), _.keys(schema.rawSchema));
+
+  if(_.size(unknownKeys) > 0){
+    var messages = [];
+    _.each(unknownKeys, function(key){
+      messages.push(message.replace(/\{field\}/g, key));
+    });
+    return messages;
+  }
+  else{
+    return schema.validate(value, object, options);
+  }
 });

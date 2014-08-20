@@ -1,55 +1,55 @@
 var _ = require('lodash');
 
 var Schema = module.exports = exports = function(schema){
+  if(schema instanceof Schema){
+    return schema; // Dont create a new schema
+  }
   if(!(this instanceof Schema)){
     return new Schema(schema);
   }
+  this.rawSchema = schema;
   if(_.isObject(schema) && schema.hasOwnProperty('validate') && _.isFunction(schema.validate)){
-    return schema; // if the schema is a function with a validate method, its good to use
+    this.validate = schema.validate;
   }
-
-  if(_.isPlainObject(schema) && _.size(schema) > 0){
+  else if(_.isPlainObject(schema) && _.size(schema) > 0){
     var firstKey = _.first(_.keys(schema));
     var validateFunction;
 
     if(_.isFunction(schema[firstKey])){
       // this is a value validator
-      validateFunction = createValueValidator(schema);
+      this._validateFunction = createValueValidator(schema);
     }
     else if(_.isObject(schema[firstKey])){
       // this is an object validator
-      validateFunction = createObjectValidator(schema);
+      this._validateFunction = createObjectValidator(schema);
     }
     else{
       var def = {};
       def[firstKey] = schema[firstKey];
       throw new Error('unsupported schema definition ' + JSON.stringify(def));
     }
-
-    return {
-      validate: function(value, object, options){
-        if(options === undefined){
-          options = object;
-          object = null;
-        }
-
-        options = getDefaults(options);
-
-        if(value === undefined){
-          return [options.isRequiredMessage];
-        }
-        else{
-          var errors = validateFunction(value, object, options);
-          return _.size(errors) == 0 ? null : errors;
-        }
-      }
-    };
-
   }
   else{
     throw new Error('unsupported schema definition ' + JSON.stringify(schema));
   }
 
+};
+
+Schema.prototype.validate = function(value, object, options){
+  if(options === undefined){
+    options = object;
+    object = null;
+  }
+
+  options = getDefaults(options);
+
+  if(value === undefined){
+    return [options.isRequiredMessage];
+  }
+  else{
+    var errors = this._validateFunction(value, object, options);
+    return _.size(errors) == 0 ? null : errors;
+  }
 };
 
 var getDefaults = function(options){
