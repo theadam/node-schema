@@ -1,7 +1,5 @@
-var should = require('chai').should();
-var expect = require('chai').expect;
-
-var Schema = require('../')
+var Q = require('q');
+var Schema = require('../');
 
 describe('Schema', function(){
 
@@ -38,32 +36,30 @@ describe('Schema', function(){
   });
 
   var schema = Schema({
-    'message': function(val){return val > 5},
-    'message2': function(val){return val % 2 == 0}
-  })
+    'message': function(val){return Q.resolve(val > 5);},
+    'message2': function(val){return val % 2 === 0;}
+  });
 
   describe('Value Schema', function(){
 
     it('should be an instance of Schema', function(){
-      schema.should.be.an.instanceof(Schema);
+      return schema.should.be.an.instanceof(Schema);
     });
 
     it('should be able to validate a value', function(){
-      schema.validate(4).should.eql(['message']);
-      schema.validate(3).should.eql(['message', 'message2']);
-      expect(schema.validate(6)).to.be.null;
+      return schema.validate(4).should.eventually.eql(['message']);
     });
 
     it('should be able to fail fast', function(){
-      schema.validate(3, {failFast: true}).should.eql(['message']);
+      return schema.validate(3, {failFast: true}).should.eventually.eql(['message']);
     });
 
     it('should require a value to validate', function(){
-      schema.validate(undefined).should.eql(['is required']);
+      return schema.validate(undefined).should.eventually.eql(['is required']);
     });
 
     it('can change required message', function(){
-      schema.validate(undefined, {isRequiredMessage: 'must exist'}).should.eql(['must exist']);
+      return schema.validate(undefined, {isRequiredMessage: 'must exist'}).should.eventually.eql(['must exist']);
     });
 
   });
@@ -73,20 +69,22 @@ describe('Schema', function(){
     it('can nest schemas', function(){
       var objSchema = Schema({
         key: {
-          'message': function(val){return val > 5},
-          'message2': function(val){return val % 2 == 0}
+          'message': function(val){return Q.resolve(val > 5);},
+          'message2': function(val){return val % 2 === 0;}
         }
       });
 
-      objSchema.should.be.an.instanceof(Schema);
-      objSchema.validate({key: 4}).should.eql({key: ['message']});
-      objSchema.validate({key: 3}).should.eql({key: ['message', 'message2']});
-      expect(objSchema.validate({key: 6})).to.be.null;
-      objSchema.validate({key: 3}, {failFast: true}).should.eql({key: ['message']});
-      objSchema.validate(undefined).should.eql(['is required']);
-      objSchema.validate(undefined, {isRequiredMessage: 'must exist'}).should.eql(['must exist']);
-      objSchema.validate({}).should.eql({key: ['is required']});
-      objSchema.validate({}, {isRequiredMessage: 'must exist'}).should.eql({key: ['must exist']});
+      return Q.all([
+        objSchema.should.be.an.instanceof(Schema),
+        objSchema.validate({key: 4}).should.eventually.eql({key: ['message']}),
+        objSchema.validate({key: 3}).should.eventually.eql({key: ['message', 'message2']}),
+        expect(objSchema.validate({key: 6})).to.eventually.be.null,
+        objSchema.validate({key: 3}, {failFast: true}).should.eventually.eql({key: ['message']}),
+        objSchema.validate(undefined).should.eventually.eql(['is required']),
+        objSchema.validate(undefined, {isRequiredMessage: 'must exist'}).should.eventually.eql(['must exist']),
+        objSchema.validate({}).should.eventually.eql({key: ['is required']}),
+        objSchema.validate({}, {isRequiredMessage: 'must exist'}).should.eventually.eql({key: ['must exist']})
+      ]);
     });
 
     it('can nest values', function(){
@@ -95,14 +93,36 @@ describe('Schema', function(){
       });
 
       objSchema.should.be.an.instanceof(Schema);
-      objSchema.validate({key: 4}).should.eql({key: ['message']});
-      objSchema.validate({key: 3}).should.eql({key: ['message', 'message2']});
-      expect(objSchema.validate({key: 6})).to.be.null;
-      objSchema.validate({key: 3}, {failFast: true}).should.eql({key: ['message']});
-      objSchema.validate(undefined).should.eql(['is required']);
-      objSchema.validate(undefined, {isRequiredMessage: 'must exist'}).should.eql(['must exist']);
-      objSchema.validate({}).should.eql({key: ['is required']});
-      objSchema.validate({}, {isRequiredMessage: 'must exist'}).should.eql({key: ['must exist']});
+
+      return Q.all([
+        objSchema.validate({key: 4}).should.eventually.eql({key: ['message']}),
+        objSchema.validate({key: 3}).should.eventually.eql({key: ['message', 'message2']}),
+        expect(objSchema.validate({key: 6})).to.eventually.be.null,
+        objSchema.validate({key: 3}, {failFast: true}).should.eventually.eql({key: ['message']}),
+        objSchema.validate(undefined).should.eventually.eql(['is required']),
+        objSchema.validate(undefined, {isRequiredMessage: 'must exist'}).should.eventually.eql(['must exist']),
+        objSchema.validate({}).should.eventually.eql({key: ['is required']}),
+        objSchema.validate({}, {isRequiredMessage: 'must exist'}).should.eventually.eql({key: ['must exist']})
+      ]);
+    });
+
+    it('can handled deferred validation', function(){
+
+      var objSchema = Schema({
+        key: {
+          'message':
+          function(val){
+            var deferred = Q.defer();
+            setTimeout(function(){
+              deferred.resolve(false);
+            }, 1);
+            return deferred.promise;
+          },
+        }
+      });
+
+      return objSchema.validate({key: 4}).should.eventually.eql({key: ['message']});
+
     });
 
   });
