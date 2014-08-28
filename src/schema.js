@@ -1,44 +1,55 @@
-/** @module Schema */
 var _ = require('lodash');
 var Q = require('q');
 var getDefaults = require('./utils/get-defaults');
 
-
 /**
-* Schema constructor.  Produces a compiled schema from a raw schema.  If a compiled
-* schema is passed in as the schema argument, it is returned untouched.
-*
-* @constructor
-* @param {Schema|Object} schema - If another Schema, that Schema is returned, if
-*                                 a raw schema, the raw schema is compiled into a
-*                                 new Schema.
-* @example
-* new Schema(existingSchema); //=> existingSchema is returned
-* @example
-* var schema = new Schema({'must be greater than 5': function(val){return > 5}});
-* schema.validate(4).then(function(result){
-*   // result => ['must be greater than 5'];
-* });
-* @example
-* var schema = new Schema({
-*   username: {
-*     'must contain more than 5 characters': function(val){val.length > 5}
-*   }
-* );
-* schema.validate({username: '1234'}).then(function(result){
-*   // result => {username: ['must contain more than 5 characters']};
-* });
-* @example
-* var validator = {
-*   validate: function(value){
-*     var result = value > 5 ? null : ['must be greater than 5'];
-*     return Promise.resolve(result);
-*   }
-* };
-* var schema = new Schema(validator); // the validator object's validate method is used directly;
-* schema.validate(4).then(function(result){
-*   // result => ['must be greater than 5']
-* });
+Schema constructor.  Produces a compiled schema from a raw schema.  If a compiled
+schema is passed in as the schema argument, it is returned untouched.
+
+@class
+@param {Schema|Object} schema - If another Schema, that Schema is returned, if
+ a raw schema, the raw schema is compiled into a new Schema.
+
+Examples:
+
+```javascript
+new Schema(existingSchema); //=> existingSchema is returned
+```
+
+```javascript
+var schema = new Schema({'must be greater than 5': function(val){return > 5}});
+
+schema.validate(4).then(function(result){
+  // result => ['must be greater than 5'];
+});
+```
+
+```javascript
+var schema = new Schema({
+  username: {
+    'must contain more than 5 characters': function(val){val.length > 5}
+  }
+);
+
+schema.validate({username: '1234'}).then(function(result){
+  // result => {username: ['must contain more than 5 characters']};
+});
+```
+
+```javascript
+var validator = {
+  validate: function(value){
+    var result = value > 5 ? null : ['must be greater than 5'];
+    return Promise.resolve(result);
+  }
+};
+
+var schema = new Schema(validator); // the validator object's validate method is used directly;
+
+schema.validate(4).then(function(result){
+  // result => ['must be greater than 5']
+});
+```
 */
 var Schema = function(schema){
   if(schema instanceof Schema){
@@ -66,7 +77,7 @@ Schema.prototype._compile = function(){
     var firstKey = _.first(_.keys(schema));
     var validateFunction;
 
-    /*
+    /*!
     We use the first value in the raw schema to determine what 'shape'
     the raw schema is in.  If the schema has values that are functions,
     they are value validators like:
@@ -99,29 +110,23 @@ Schema.prototype._compile = function(){
 };
 
 /**
-* Uses the {Schema} to validate the value.
-*
-* @param  {*}        value     - The value to validate
-* @param  {Object}   [object]  - The object the value was contained within
-* @param  {Object}   [options] - An object containing validation options
-* @return {Promise}  A Promise that resolves to the result of the validation.  For
-*                    nested objects, this should be an object.  For single value
-*                    validations, this should be an array of errors.  If there are no
-*                    errors, this promise will resolve to null.
+Validates the value against the schema
+@param  {*}        value     - The value to validate
+@param  {Object}   [options] - An object containing validation options
+@param  {Object}   [object]  - The object the value was contained within
+@return {Promise}  A Promise that resolves to the result of the validation.  For
+ nested objects, this should be an object.  For single value
+ validations, this should be an array of errors.  If there are no
+ errors, this promise will resolve to null.
 */
-Schema.prototype.validate = function(value, object, options){
-  if(options === undefined){
-    options = object;
-    object = null;
-  }
-
+Schema.prototype.validate = function(value, options, object){
   options = getDefaults(options, Schema.defaultOptions);
 
   if(value === undefined){
     return Q.resolve([options.isRequiredMessage]);
   }
   else{
-    return Q.resolve(this._validateFunction(value, object, options))
+    return Q.resolve(this._validateFunction(value, options, object))
     .then(function(errors){
       return _.size(errors) === 0 ? null : errors;
     }
@@ -130,10 +135,9 @@ Schema.prototype.validate = function(value, object, options){
 };
 
 /**
-* @property isRequiredMessage {String}  - The error message returned when a required value is undefined
-* @property failFast          {boolean} - If true, every invalid value will only respond with an array
-*                                         containing only their first error message.
-*
+@property isRequiredMessage {String}  - The error message returned when a required value is undefined
+@property failFast          {boolean} - If true, every invalid value will only respond with an array
+          containing only their first error message.
 */
 Schema.defaultOptions = {
   isRequiredMessage: 'is required',
@@ -151,12 +155,12 @@ var createObjectValidator = function(schema){
     compiled[field] = Schema(subSchema);
   });
 
-  var validator = function(value, object, options){
+  var validator = function(value, options, object){
     var messages = {};
     var promises = [];
     _.forIn(compiled, function(schema, field){
       promises.push(
-        Q.resolve(schema.validate(value[field], value, options))
+        Q.resolve(schema.validate(value[field], options, value))
         .then(function(message){
           if(_.size(message) > 0){
             messages[field] = message;
@@ -172,12 +176,12 @@ var createObjectValidator = function(schema){
 };
 
 var createValueValidator = function(schema){
-  var validator = function(value, object, options){
+  var validator = function(value, options, object){
     var promises = [];
 
     _.forIn(schema, function(validator, message){
       promises.push(
-        Q.resolve(validator(value, object, options))
+        Q.resolve(validator(value, options, object))
         .then(function(validationResult){
           if(!validationResult){
             return message;

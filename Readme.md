@@ -8,8 +8,7 @@ A simple way to build javascript schemas for validating objects.
 node-schema focuses on simplicity and flexibility.  Its great when you need ease of use,
 custom validation functions, or custom messages returned from validation.
 
-In order to compile a schema, you just use the schema function.  
-
+####Basic Usage
 Schemas can be used to validate simple values.
 
 ```javascript
@@ -21,13 +20,24 @@ var valueSchema = Schema({
   'can only contain numbers and letters': str.matches(/^[a-zA-Z0-9]*$/)
 });
 
-valueSchema.validate(''); //=> [ 'must have at least 5 characters' ]
-valueSchema.validate('myUser?'); //=> [ 'can only contain numbers and letters' ]
-valueSchema.validate('myValidUser'); //=> null
+valueSchema.validate('').then(function(errors){
+  // errors => [ 'must have at least 5 characters' ]
+});
+valueSchema.validate('myUser?').then(function(errors){
+  // errors => [ 'can only contain numbers and letters' ]
+});
+valueSchema.validate('myValidUser').then(function(errors){
+  // errors => null
+});
 ```
 
 In value schemas, the keys are messages and the values are simple validating functions.
 This means that it is very easy to create custom validations.
+
+The validating functions take 3 arguments:
+* __value__: the value to validate
+* [__options__]: the options passed to the validate function
+* [__object__]: the object containing the value
 
 ```javascript
 var valueSchema = Schema({
@@ -39,17 +49,18 @@ var valueSchema = Schema({
   })
 });
 
-valueSchema.validate(''); //=> [ 'must have at least 5 characters' ]
-valueSchema.validate('myUser?'); //=> [ 'can only contain numbers and letters' ]
-valueSchema.validate('myValidUser'); //=> null
+valueSchema.validate('').then(function(errors){
+  // errors => [ 'must have at least 5 characters' ]
+});
+valueSchema.validate('myUser?').then(function(errors){
+  // errors => [ 'can only contain numbers and letters' ]
+});
+valueSchema.validate('myValidUser').then(function(errors){
+  // errors => null
+});
 ```
 
-The validating functions take 3 arguments
-* __value__: the value to validate
-* __object__: the object containing the value
-* __options__: the options passed to the validate function
-
-Object schemas provide a lot more power
+Object schemas provide the ability to nest fields.
 
 ```javascript
 var userSchema = Schema({
@@ -59,9 +70,15 @@ var userSchema = Schema({
   }
 });
 
-userSchema.validate({username: ''}); //=> { username: [ 'must have at least 5 characters' ] }
-userSchema.validate({username: 'myUser?'}); //=> { username: [ 'can only contain numbers and letters' ] }
-userSchema.validate({username: 'myValidUser'}); //=> null
+userSchema.validate({username: ''}).then(function(errors){
+  // errors => { username: [ 'must have at least 5 characters' ] }
+});
+userSchema.validate({username: 'myUser?'}).then(function(errors){
+  // errors => { username: [ 'can only contain numbers and letters' ] }
+});
+userSchema.validate({username: 'myValidUser'}).then(function(errors){
+  // errors => null
+});
 ```
 
 Validating functions can use the object argument to check the value of sibling fields.
@@ -72,7 +89,7 @@ var passwordSchema = Schema({
     'must contain at least 5 characters': str.isLength(5)
   },
   passwordCheck: {
-    'must match password': function(value, object){
+    'must match password': function(value, options, object){
       return value == object.password;
     }
   }
@@ -81,10 +98,12 @@ var passwordSchema = Schema({
 passwordSchema.validate({
   password: 'tough',
   passwordCheck: 'weak'
-}); //=> { passwordCheck: [ 'must match password' ] }
+}).then(function(errors){
+  // errors => { passwordCheck: [ 'must match password' ] }
+});
 ```
 
-Schemas can also be nested
+Schema objects can be nested inside object schemas.
 
 ```javascript
 var postSchema = Schema({
@@ -99,87 +118,51 @@ postSchema.validate({
   user: {
     username: 'invalid?'
   }
-});/* =>
-{
-  user: {
-    username: [ 'can only contain numbers and letters' ]
-  },
-  post: [ 'must contain between 25 and 500 characters' ]
-}
-*/
-```
-
-A schema can also be compiled from an object with a validate function with this signature:
-
-```javascript
-function(value, object, options){
-  // Value is the data being validated, object
-  // is the object that contains the value,
-  // and options is an object passed to the validate
-  // function that contains any special options.
-
-  // Returns the result of the validation,
-  // usually an object or an array of errors.
-  // Returns null if the value is valid.
-}
-```
-
-###Middleware
-node-schema supports custom middleware to modify the way that schemas work
-
-A good example is the builtin Field.optional middleware.
-
-By default, all fields are required; if undefined, the validation returns an error that
-states that the field is required.  using Field.optional, and field can be made an optional
-field.  If it is defined, it is validated with the schema, if it doesn't there will not be any
-error messages returned.
-
-```javascript
-var Field = Schema.Field;
-
-var maybeSchema = Schema({
-  maybe: Field.optional({
-    'must be at least 5 characters long': str.isLength(5)
-  })
-});
-
-maybeSchema.validate({}); //=> null
-maybeSchema.validate({maybe: 'bad'}); //=> { maybe: [ 'must be at least 5 characters long' ] }
-```
-
-Another builtin allows you to provide custom field names that will be output in the
-validation messages.
-
-```javascript
-var userSchema = Schema({
-  username: Field.name('Username', {
-    '{name} must have at least 5 characters': str.isLength(5),
-    '{name} can only contain numbers and letters': str.matches(/^[a-zA-Z0-9]*$/)
-  })
-});
-
-userSchema.validate({username: ''}); //=> { username: [ 'Username must have at least 5 characters' ] }
-userSchema.validate({username: 'myUser?'}); //=> { username: [ 'Username can only contain numbers and letters' ] }
-userSchema.validate({username: 'myValidUser'}); //=> null
-```
-
-Custom middleware can also be created with the Field.createMiddleware function.
-
-A good example of how to do this, is the source for the Field.optional function.
-
-```javascript
-Field.optional = Field.createMiddleware(function(value, object, options, schema){
-  if(value === undefined){
-    return null;
+}).then(function(errors){
+  /* errors =>
+  {
+    user: {
+      username: [ 'can only contain numbers and letters' ]
+    },
+    post: [ 'must contain between 25 and 500 characters' ]
   }
-  return schema.validate(value, object, options);
+  */
 });
 ```
 
-The schema argument, is just the compiled schema nested under this middleware.  Calling the
-schema's validate function with value, object, and options as arguments will return
-the validation result as if the middleware was not there.  The optional function, however,
-returns null if the value is undefined, and the normal validation result if defined.
+####Advanced Usage
+#####Required Fields
+By default, all fields are required.  The error message on missing fields
+can be changed globally or on a field by field basis.
+
+```javascript
+var requiredSchema = Schema({
+  required: {'must contain at least 5 characters': str.isLength(5)}
+});
+
+// default
+requiredSchema.validate({}).then(function(errors){
+  // errors => {required: ['is required']}
+});
+
+// global change (using options)
+requiredSchema.validate({}, {isRequiredMessge: 'must exist'})
+.then(function(errors){
+  // errors => {required: ['must exist']}
+});
+
+var Field = Schema.Field;
+// per field
+requiredSchema = Schema({
+  required: Field.required('is a required field', {
+    'must contain at least 5 characters': str.isLength(5)
+  })
+});
+
+requiredSchema.validate({}).then(function(errors){
+  // errors => {required: ['is a required field']}
+});
+```
 
 ###License (MIT)
 
