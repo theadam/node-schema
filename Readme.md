@@ -8,6 +8,8 @@ A simple way to build javascript schemas for validating objects.
 node-schema focuses on simplicity and flexibility.  Its great when you need ease of use,
 custom validation functions, or custom messages returned from validation.
 
+Schemas can be used in node or in the browser (using something like browserify).
+
 ####Basic Usage
 Schemas can be used to validate simple values.
 
@@ -161,6 +163,44 @@ requiredSchema = Schema({
 
 requiredSchema.validate({}).then(function(errors){
   // errors => {required: ['is a required field']}
+});
+```
+
+#####Optional Fields
+Fields can be made optional
+
+```javascript
+var Field = Schema.Field;
+
+var maybeSchema = Schema({
+  maybe: Field.optional({
+    'must contain at least 5 characters': str.isLength(5)
+  })
+});
+
+maybeSchema.validate({}).then(function(errors){
+  // errors => null
+});
+
+maybeSchema.validate({maybe: '1234'}).then(function(errors){
+  // errors => {maybe: ['must contain at least 5 characters']}
+});
+```
+
+#####Asynchronous Validation
+A promise can be returned from a validation function for asynchronous validation.
+
+```javascript
+var fs = require('fs');
+
+var asynchronousSchema = Schema({
+  file: {
+    'file must exist': function(file){
+      return new Promise(function(resolve){
+        fs.exists(file, resolve);
+      });
+    }
+  }
 });
 ```
 
