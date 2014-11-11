@@ -1,3 +1,5 @@
+require('es6-promise').polyfill();
+
 var Schema = require('./src/schema');
 var Field = require('./src/field');
 

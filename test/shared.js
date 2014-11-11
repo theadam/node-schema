@@ -1,3 +1,5 @@
+require('es6-promise').polyfill();
+
 global.chai = require('chai');
 global.should = require('chai').should();
 global.expect = require('chai').expect;

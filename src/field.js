@@ -1,6 +1,7 @@
+require('es6-promise').polyfill();
+
 var _ = require('lodash');
 var Schema = require('./schema');
-var Q = require('q');
 
 /**
 @namespace
@@ -43,7 +44,7 @@ Field.createMiddleware = function(modifierFunc){
       args.push(object || {});
       args.push(compiled);
 
-      return Q.resolve(modifierFunc.apply(null, args));
+      return Promise.resolve(modifierFunc.apply(null, args));
     };
 
     return Schema({validate: validator});

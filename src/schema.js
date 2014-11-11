@@ -1,5 +1,6 @@
+require('es6-promise').polyfill();
+
 var _ = require('lodash');
-var Q = require('q');
 var getDefaults = require('./utils/get-defaults');
 
 /**
@@ -123,10 +124,10 @@ Schema.prototype.validate = function(value, options, object){
   options = getDefaults(options, Schema.defaultOptions);
 
   if(value === undefined){
-    return Q.resolve([options.isRequiredMessage]);
+    return Promise.resolve([options.isRequiredMessage]);
   }
   else{
-    return Q.resolve(this._validateFunction(value, options, object))
+    return Promise.resolve(this._validateFunction(value, options, object))
     .then(function(errors){
       return _.size(errors) === 0 ? null : errors;
     }
@@ -160,7 +161,7 @@ var createObjectValidator = function(schema){
     var promises = [];
     _.forIn(compiled, function(schema, field){
       promises.push(
-        Q.resolve(schema.validate(value[field], options, value))
+        Promise.resolve(schema.validate(value[field], options, value))
         .then(function(message){
           if(_.size(message) > 0){
             messages[field] = message;
@@ -169,7 +170,7 @@ var createObjectValidator = function(schema){
       );
     });
 
-    return Q.all(promises).then(function(){return messages;});
+    return Promise.all(promises).then(function(){return messages;});
   };
 
   return validator;
@@ -181,7 +182,7 @@ var createValueValidator = function(schema){
 
     _.forIn(schema, function(validator, message){
       promises.push(
-        Q.resolve(validator(value, options, object))
+        Promise.resolve(validator(value, options, object))
         .then(function(validationResult){
           if(!validationResult){
             return message;
@@ -191,7 +192,7 @@ var createValueValidator = function(schema){
     );
   });
 
-  return Q.all(promises)
+  return Promise.all(promises)
   .then(function(vals){return _.compact(vals);}) // remove undefineds
   .then(function(vals){return options.failFast ? [_.first(vals)] : vals;}) //handle fail fast
   .then(function(vals){return _.size(vals) > 0 ? vals : null;}); // return the array or null

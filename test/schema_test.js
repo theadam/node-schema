@@ -1,4 +1,3 @@
-var Q = require('q');
 var Schema = require('../');
 
 describe('Schema', function(){
@@ -36,7 +35,7 @@ describe('Schema', function(){
   });
 
   var schema = Schema({
-    'message': function(val){return Q.resolve(val > 5);},
+    'message': function(val){return Promise.resolve(val > 5);},
     'message2': function(val){return val % 2 === 0;}
   });
 
@@ -69,12 +68,12 @@ describe('Schema', function(){
     it('can nest schemas', function(){
       var objSchema = Schema({
         key: {
-          'message': function(val){return Q.resolve(val > 5);},
+          'message': function(val){return Promise.resolve(val > 5);},
           'message2': function(val){return val % 2 === 0;}
         }
       });
 
-      return Q.all([
+      return Promise.all([
         objSchema.should.be.an.instanceof(Schema),
         objSchema.validate({key: 4}).should.eventually.eql({key: ['message']}),
         objSchema.validate({key: 3}).should.eventually.eql({key: ['message', 'message2']}),
@@ -94,7 +93,7 @@ describe('Schema', function(){
 
       objSchema.should.be.an.instanceof(Schema);
 
-      return Q.all([
+      return Promise.all([
         objSchema.validate({key: 4}).should.eventually.eql({key: ['message']}),
         objSchema.validate({key: 3}).should.eventually.eql({key: ['message', 'message2']}),
         expect(objSchema.validate({key: 6})).to.eventually.be.null,
@@ -112,11 +111,11 @@ describe('Schema', function(){
         key: {
           'message':
           function(val){
-            var deferred = Q.defer();
-            setTimeout(function(){
-              deferred.resolve(false);
-            }, 1);
-            return deferred.promise;
+            return new Promise(function(resolver){
+              setTimeout(function(){
+                resolver(false);
+              }, 1);
+            });
           },
         }
       });
