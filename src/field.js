@@ -81,7 +81,9 @@ var maybeSchema = Schema({
 ```
 */
 Field.optional = Field.createMiddleware(function(value, options, object, schema){
-  if(value === undefined){
+  var ignoreValueIfOptional = options.ignoreValueIfOptional;
+
+  if((ignoreValueIfOptional && ignoreValueIfOptional(value)) || value === undefined){
     return null;
   }
   return schema.validate(value, options, object);
