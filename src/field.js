@@ -78,10 +78,17 @@ var maybeSchema = Schema({
     'error message': validatorFunction
   })
 });
+
+maybeSchema.validate(fieldValues, {
+  // do not validate empty string values if field is optional:
+  ignoreValueIfOptional: function(value) { return value === ''; }
+});
 ```
 */
 Field.optional = Field.createMiddleware(function(value, options, object, schema){
-  if(value === undefined){
+  var ignoreValueIfOptional = options.ignoreValueIfOptional;
+
+  if((ignoreValueIfOptional && ignoreValueIfOptional(value)) || value === undefined){
     return null;
   }
   return schema.validate(value, options, object);
