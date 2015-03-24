@@ -61,54 +61,15 @@ var Schema = function(schema){
   }
 
   this.rawSchema = schema;
-  this._compile();
+  if(schema && _.isFunction(schema.validate)){
+    this.validate = schema.validate;
+  }
+  else{
+    this._validateFunction = createValidateFunction(schema);
+  }
 };
 
 module.exports = exports = Schema;
-
-Schema.prototype._compile = function(){
-
-  var schema = this.rawSchema;
-
-  if(_.isObject(schema) && _.isFunction(schema.validate)){
-    // use the validate function from an object with a validation function
-    this.validate = schema.validate;
-  }
-  else if(_.isPlainObject(schema) && _.size(schema) > 0){
-    var firstKey = _.first(_.keys(schema));
-    var validateFunction;
-
-    /*!
-    We use the first value in the raw schema to determine what 'shape'
-    the raw schema is in.  If the schema has values that are functions,
-    they are value validators like:
-
-    {'error message', validatingFunction}
-
-    If the schema's value is another object, this is a nested schema like:
-
-    {'field' : schemaOrRawSchema};
-    */
-
-    if(_.isFunction(schema[firstKey])){
-      // this is a value validator
-      this._validateFunction = createValueValidator(schema);
-    }
-    else if(_.isObject(schema[firstKey])){
-      // this is an object validator
-      this._validateFunction = createObjectValidator(schema);
-    }
-    else{
-      var def = {};
-      def[firstKey] = schema[firstKey];
-      throw new Error('unsupported schema definition ' + JSON.stringify(def));
-    }
-  }
-  else{
-    throw new Error('unsupported schema definition ' + JSON.stringify(schema));
-  }
-
-};
 
 /**
 Validates the value against the schema
@@ -200,3 +161,39 @@ var createValueValidator = function(schema){
 
 return validator;
 };
+
+function createValidateFunction(schema){
+  if(!_.isPlainObject(schema)) throw new Error('unsupported schema definition ' + JSON.stringify(schema));
+  if(_.size(schema) === 0){
+    return function(){
+      return Promise.resolve(null);
+    };
+  }
+  var firstKey = _.first(_.keys(schema));
+
+    /*!
+    We use the first value in the raw schema to determine what 'shape'
+    the raw schema is in.  If the schema has values that are functions,
+    they are value validators like:
+
+    {'error message', validatingFunction}
+
+    If the schema's value is another object, this is a nested schema like:
+
+    {'field' : schemaOrRawSchema};
+    */
+
+    if(_.isFunction(schema[firstKey])){
+      // this is a value validator
+      return createValueValidator(schema);
+    }
+    else if(_.isObject(schema[firstKey])){
+      // this is an object validator
+      return createObjectValidator(schema);
+    }
+    else{
+      var def = {};
+      def[firstKey] = schema[firstKey];
+      throw new Error('unsupported schema definition ' + JSON.stringify(def));
+    }
+}

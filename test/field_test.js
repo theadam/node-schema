@@ -39,4 +39,15 @@ describe('required', function(){
 
     return schema.validate(undefined).should.eventually.be.eql(['field is required']);
   });
+
+  it('should work with an empty schema', function(){
+    var schema = Schema({
+      field: Field.required('field is required')
+    });
+
+    return Promise.all([
+      schema.validate({}).should.eventually.be.eql({field: ['field is required']}),
+      schema.validate({field: 'test'}).should.eventually.be.eql(null)
+    ]);
+  });
 });

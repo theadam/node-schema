@@ -14,10 +14,12 @@ describe('Schema', function(){
     schemaObj.validate('anything').should.eql(['hey']);
   });
 
-  it('should fail when given an empty object', function(){
-    var schema = {};
-
-    expect(Schema.bind(null, schema)).to.throw(Error);
+  it('should validate when given an empty object', function(){
+    return Promise.all([
+      Schema({}).validate('').should.eventually.eql(null),
+      Schema({}).validate(undefined).should.eventually.eql(['is required']),
+      Schema({field: {}}).validate({field: undefined}).should.eventually.eql({field: ['is required']})
+    ]);
   });
 
   it('should fail when given a non plain object', function(){

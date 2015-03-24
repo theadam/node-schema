@@ -28,7 +28,13 @@ Field.createMiddleware = function(modifierFunc){
   var extraArgLength = modifierFunc.length - 4; // amount of extra args that should have been passed
   return function(){
     var initialArgs = Array.prototype.slice.call(arguments, 0);
-    var schema = initialArgs.pop();
+    var schema;
+    if(initialArgs.length === extraArgLength){
+      schema = {};
+    }
+    else{
+      schema = initialArgs.pop();
+    }
     var compiled = Schema(schema);
 
     if(initialArgs.length != extraArgLength){
