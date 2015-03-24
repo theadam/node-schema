@@ -164,6 +164,15 @@ requiredSchema = Schema({
 requiredSchema.validate({}).then(function(errors){
   // errors => {required: ['is a required field']}
 });
+
+// No need for a sub-schema definition if the field can be anything
+requiredSchema = Schema({
+  required: Field.required('is a required field')
+});
+
+requiredSchema.validate({}).then(function(errors){
+  // errors => {required: ['is a required field']}
+});
 ```
 
 #####Optional Fields
